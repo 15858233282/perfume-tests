@@ -1,0 +1,373 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>香水人格测试</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Microsoft YaHei",sans-serif;background:#f9f4f5;color:#333;line-height:1.6}
+.page{max-width:520px;margin:0 auto;background:#fff;min-height:100vh;padding-bottom:60px}
+.header{padding:24px 20px 14px;text-align:center}
+.title{font-size:22px;font-weight:600;color:#b68893}
+.desc{font-size:14px;color:#999;margin-top:6px}
+.progress{padding:0 20px 10px}
+.progress-bar{height:6px;background:#f0e6e9;border-radius:99px;overflow:hidden}
+.progress-inner{height:100%;background:#d4a7b1;width:0}
+.progress-text{text-align:right;font-size:12px;color:#999;margin-top:4px}
+.quiz{padding:20px;display:none}
+.quiz.active{display:block;animation:fadeUp 0.4s forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.q-title{font-size:16px;font-weight:500;margin-bottom:12px}
+.q-tip{font-size:12px;color:#999;margin-bottom:14px}
+.opt{background:#fdfbfc;border:1px solid #f0e6e9;border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.opt.active{background:#f8eff1;border-color:#d4a7b1;color:#b67887}
+.btns{display:flex;gap:12px;padding:20px;position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:#fff}
+.btn{flex:1;padding:14px 0;border-radius:14px;border:none;font-size:15px;font-weight:500}
+.btn-prev{background:#f5f5f5;color:#666}
+.btn-next{background:#d4a7b1;color:#fff}
+.btn:disabled{opacity:0.5}
+.result{display:none;padding:30px 20px;animation:fadeIn 0.5s forwards}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.r-tag{display:inline-block;padding:6px 12px;background:#f8eff1;color:#b67887;border-radius:99px;font-size:14px;margin-bottom:10px}
+.r-title{font-size:20px;font-weight:600;margin-bottom:8px}
+.r-desc{font-size:14px;color:#666;margin-bottom:20px}
+.r-item{margin-bottom:16px}
+.r-label{font-size:14px;color:#999;margin-bottom:4px}
+.r-text{font-size:15px}
+.r-perfume{background:#fdfbfc;border:1px solid #f0e6e9;border-radius:12px;padding:14px;margin-bottom:10px}
+.p-name{font-weight:500;font-size:15px}
+.p-en{font-size:12px;color:#999;margin-top:2px}
+.p-desc{font-size:14px;color:#666;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="title">你的本命香水测试</div>
+    <div class="desc">20题找到最适合你的香调</div>
+  </div>
+  <div class="progress">
+    <div class="progress-bar"><div class="progress-inner" id="inner"></div></div>
+    <div class="progress-text" id="text">01/20</div>
+  </div>
+  <div id="quizs"></div>
+  <div class="result" id="result"></div>
+  <div class="btns">
+    <button class="btn btn-prev" id="prev">上一题</button>
+    <button class="btn btn-next" id="next">下一题</button>
+  </div>
+</div>
+<script>
+const quizData=[
+{title:"你更偏爱哪种自然场景？",tip:"可多选1-3项",opts:[
+{text:"清晨花园",type:"floral"},
+{text:"海边微风",type:"fresh"},
+{text:"秋日森林",type:"woody"},
+{text:"热带果园",type:"fruity"},
+{text:"神秘东方市集",type:"oriental"}
+]},
+{title:"你喜欢的穿搭风格？",tip:"可多选1-3项",opts:[
+{text:"温柔仙女风",type:"floral"},
+{text:"简约清爽风",type:"fresh"},
+{text:"复古文艺木质",type:"woody"},
+{text:"甜美可爱",type:"fruity"},
+{text:"高级神秘",type:"oriental"}
+]},
+{title:"你理想的约会氛围？",tip:"可多选1-3项",opts:[
+{text:"浪漫花海",type:"floral"},
+{text:"海边日落",type:"fresh"},
+{text:"壁炉暖木",type:"woody"},
+{text:"甜蜜下午茶",type:"fruity"},
+{text:"异域风情",type:"oriental"}
+]},
+{title:"你给人的第一印象？",tip:"可多选1-3项",opts:[
+{text:"温柔优雅",type:"floral"},
+{text:"干净舒服",type:"fresh"},
+{text:"沉稳内敛",type:"woody"},
+{text:"活泼甜美",type:"fruity"},
+{text:"神秘迷人",type:"oriental"}
+]},
+{title:"你喜欢的气味类型？",tip:"可多选1-3项",opts:[
+{text:"花香",type:"floral"},
+{text:"草木/海洋",type:"fresh"},
+{text:"木质/檀香",type:"woody"},
+{text:"果香",type:"fruity"},
+{text:"琥珀/香草",type:"oriental"}
+]},
+{title:"你向往的生活状态？",tip:"可多选1-3项",opts:[
+{text:"精致优雅",type:"floral"},
+{text:"自由随性",type:"fresh"},
+{text:"安静治愈",type:"woody"},
+{text:"快乐无忧",type:"fruity"},
+{text:"独特高级",type:"oriental"}
+]},
+{title:"你最喜欢的季节？",tip:"可多选1-3项",opts:[
+{text:"春天",type:"floral"},
+{text:"夏天",type:"fresh"},
+{text:"秋天",type:"woody"},
+{text:"四季都爱甜",type:"fruity"},
+{text:"冬天",type:"oriental"}
+]},
+{title:"你偏爱的香水浓度？",tip:"可多选1-3项",opts:[
+{text:"淡香优雅",type:"floral"},
+{text:"极淡清爽",type:"fresh"},
+{text:"温润持久",type:"woody"},
+{text:"清甜明亮",type:"fruity"},
+{text:"浓郁持久",type:"oriental"}
+]},
+{title:"你喜欢的时间用香？",tip:"可多选1-3项",opts:[
+{text:"白天通勤",type:"floral"},
+{text:"运动/日常",type:"fresh"},
+{text:"夜晚放松",type:"woody"},
+{text:"任何时候",type:"fruity"},
+{text:"重要场合",type:"oriental"}
+]},
+{title:"你性格里的关键词？",tip:"可多选1-3项",opts:[
+{text:"温柔感性",type:"floral"},
+{text:"理性独立",type:"fresh"},
+{text:"内敛稳重",type:"woody"},
+{text:"乐观开朗",type:"fruity"},
+{text:"神秘个性",type:"oriental"}
+]},
+{title:"你喜欢的香材？",tip:"可多选1-3项",opts:[
+{text:"玫瑰/茉莉",type:"floral"},
+{text:"柠檬/薄荷",type:"fresh"},
+{text:"雪松/檀木",type:"woody"},
+{text:"苹果/蜜桃",type:"fruity"},
+{text:"琥珀/麝香",type:"oriental"}
+]},
+{title:"你希望香水带给你？",tip:"可多选1-3项",opts:[
+{text:"优雅气质",type:"floral"},
+{text:"清爽干净",type:"fresh"},
+{text:"安心治愈",type:"woody"},
+{text:"甜美亲和力",type:"fruity"},
+{text:"高级气场",type:"oriental"}
+]},
+{title:"你更喜欢的氛围？",tip:"可多选1-3项",opts:[
+{text:"浪漫温柔",type:"floral"},
+{text:"自然清新",type:"fresh"},
+{text:"温暖沉静",type:"woody"},
+{text:"轻松愉悦",type:"fruity"},
+{text:"魅惑迷人",type:"oriental"}
+]},
+{title:"你日常出门习惯？",tip:"可多选1-3项",opts:[
+{text:"精致打扮",type:"floral"},
+{text:"简单舒适",type:"fresh"},
+{text:"低调内敛",type:"woody"},
+{text:"可爱元气",type:"fruity"},
+{text:"独特吸睛",type:"oriental"}
+]},
+{title:"你喜欢的甜品口味？",tip:"可多选1-3项",opts:[
+{text:"鲜花蛋糕",type:"floral"},
+{text:"抹茶/清爽",type:"fresh"},
+{text:"焦糖/木质",type:"woody"},
+{text:"水果糖",type:"fruity"},
+{text:"香草/巧克力",type:"oriental"}
+]},
+{title:"你喜欢的颜色？",tip:"可多选1-3项",opts:[
+{text:"粉色/紫色",type:"floral"},
+{text:"蓝色/绿色",type:"fresh"},
+{text:"棕色/咖色",type:"woody"},
+{text:"黄色/橙色",type:"fruity"},
+{text:"黑色/金色",type:"oriental"}
+]},
+{title:"你喜欢的音乐风格？",tip:"可多选1-3项",opts:[
+{text:"抒情温柔",type:"floral"},
+{text:"轻快治愈",type:"fresh"},
+{text:"爵士/复古",type:"woody"},
+{text:"甜美流行",type:"fruity"},
+{text:"电子/异域",type:"oriental"}
+]},
+{title:"你喜欢的空间味道？",tip:"可多选1-3项",opts:[
+{text:"香薰花香",type:"floral"},
+{text:"洁净空气",type:"fresh"},
+{text:"木质香薰",type:"woody"},
+{text:"果香房间",type:"fruity"},
+{text:"高级香氛",type:"oriental"}
+]},
+{title:"你理想的气质标签？",tip:"可多选1-3项",opts:[
+{text:"温柔女神",type:"floral"},
+{text:"清冷干净",type:"fresh"},
+{text:"文艺高级",type:"woody"},
+{text:"甜美少女",type:"fruity"},
+{text:"神秘御姐",type:"oriental"}
+]},
+{title:"你最想提升的魅力？",tip:"可多选1-3项",opts:[
+{text:"优雅感",type:"floral"},
+{text:"清爽感",type:"fresh"},
+{text:"沉稳感",type:"woody"},
+{text:"甜美感",type:"fruity"},
+{text:"高级感",type:"oriental"}
+]}
+];
+const resultConfig={
+floral:{
+name:"花香调 · Floral",
+tag:"温柔 优雅 浪漫",
+desc:"你内心柔软浪漫，气质优雅温柔，自带治愈气场，是人群中最舒服的存在。",
+note:"玫瑰、茉莉、铃兰、牡丹",
+perfume:[
+{name:"迪奥 真我",en:"Dior J'adore",desc:"经典优雅花香，温柔又高级"},
+{name:"香奈儿 邂逅柔情",en:"Chanel Chance Eau Tendre",desc:"甜美温柔，少女感与优雅并存"},
+{name:"祖玛珑 蓝风铃",en:"Jo Malone Bluebell",desc:"干净清透的温柔花香"}
+]},
+fruity:{
+name:"果香调 · Fruity",
+tag:"甜美 元气 活泼",
+desc:"你乐观开朗，元气满满，自带甜美元气，让人忍不住想靠近。",
+note:"柑橘、苹果、水蜜桃、莓果",
+perfume:[
+{name:"缪缪 甜心欧蕾",en:"Miu Miu Fleur d'Argent",desc:"清甜少女，活泼明亮"},
+{name:"古驰 罪爱悦源",en:"Gucci Guilty Love Edition",desc:"甜而不腻，元气清新"},
+{name:"欧珑 西柚天堂",en:"Atelier Cologne Pomelo Paradis",desc:"清爽果味，治愈心情"}
+]},
+woody:{
+name:"木质调 · Woody",
+tag:"沉稳 治愈 高级",
+desc:"你内敛稳重，内心强大，温柔又有力量，给人满满的安全感。",
+note:"檀木、雪松、沉香、琥珀木",
+perfume:[
+{name:"宝格丽 大吉岭茶",en:"Bvlgari Pour Homme",desc:"干净温柔，治愈木质"},
+{name:"祖玛珑 乌木与佛手柑",en:"Jo Malone Oud & Bergamot",desc:"高级沉稳，持久迷人"},
+{name:"莱俪 墨恋",en:"Lalique Encre Noire",desc:"沉静书卷气，低调高级"}
+]},
+fresh:{
+name:"清新调 · Fresh",
+tag:"干净 清冷 自由",
+desc:"你独立随性，清爽干净，像风一样自由，让人觉得舒服又自在。",
+note:"海洋、薄荷、柠檬、绿叶",
+perfume:[
+{name:"三宅一生 一生之水",en:"Issey Miyake L'Eau d'Issey",desc:"清冷干净，极简高级"},
+{name:"大卫杜夫 冷水",en:"Davidoff Cool Water",desc:"海洋清爽，冷静通透"},
+{name:"菲拉格慕 晴空蔚蓝",en:"Ferragamo Acqua Forte",desc:"明亮清爽，夏日气息"}
+]},
+oriental:{
+name:"东方调 · Oriental",
+tag:"神秘 高级 魅惑",
+desc:"你独特迷人，气场强大，有故事感和神秘感，让人一眼难忘。",
+note:"琥珀、香草、麝香、广藿香",
+perfume:[
+{name:"YSL 黑鸦片",en:"YSL Black Opium",desc:"魅惑神秘，越闻越上头"},
+{name:"娇兰 东方神话",en:"Guerlain Oriental Mythique",desc:"浓郁高级，异域风情"},
+{name:"阿玛尼 玉龙茶香",en:"Armani Tea Master Collection",desc:"东方高级，沉稳大气"}
+]}
+};
+const quizs=document.getElementById("quizs");
+const res=document.getElementById("result");
+const inner=document.getElementById("inner");
+const text=document.getElementById("text");
+const prev=document.getElementById("prev");
+const next=document.getElementById("next");
+let currentNum=1;
+const total=quizData.length;
+let answerMap={};
+let typeScore={floral:0,fruity:0,woody:0,fresh:0,oriental:0};
+function renderQuizs(){
+quizs.innerHTML="";
+quizData.forEach((q,i)=>{
+const idx=i+1;
+const d=document.createElement("div");
+d.className="quiz"+(idx===1?" active":"");
+d.dataset.idx=idx;
+let h='<div class="q-title">'+q.title+'</div>';
+h+='<div class="q-tip">'+q.tip+'</div>';
+q.opts.forEach(o=>{
+const sel=answerMap[idx]&&answerMap[idx].includes(o.type)?" active":"";
+h+='<div class="opt'+sel+'" data-type="'+o.type+'">'+o.text+'</div>';
+});
+d.innerHTML=h;
+quizs.appendChild(d);
+});
+bindOpt();
+}
+function bindOpt(){
+const all=document.querySelectorAll(".opt");
+all.forEach(o=>{
+o.onclick=()=>{
+const q=o.closest(".quiz");
+const idx=Number(q.dataset.idx);
+const t=o.dataset.type;
+if(!answerMap[idx])answerMap[idx]=[];
+const has=answerMap[idx].includes(t);
+if(has){
+answerMap[idx]=answerMap[idx].filter(x=>x!==t);
+o.classList.remove("active");
+}else{
+if(answerMap[idx].length>=3)return;
+answerMap[idx].push(t);
+o.classList.add("active");
+}
+refreshOptionStatus();
+};
+});
+}
+function refreshOptionStatus(){
+const idx=currentNum;
+const q=document.querySelector(".quiz[data-idx='"+idx+"']");
+const opts=q.querySelectorAll(".opt");
+const canNext=answerMap[idx]&&answerMap[idx].length>=1;
+next.disabled=!canNext;
+opts.forEach(o=>{
+const t=o.dataset.type;
+const has=answerMap[idx]&&answerMap[idx].includes(t);
+o.classList.toggle("active",has);
+});
+}
+function updateProgress(){
+const p=(currentNum/total)*100;
+inner.style.width=p+"%";
+text.textContent=String(currentNum).padStart(2,"0")+"/"+total;
+prev.disabled=currentNum===1;
+if(currentNum===total){
+next.textContent="查看结果";
+}else{
+next.textContent="下一题";
+}
+}
+function showCurrent(){
+document.querySelectorAll(".quiz").forEach(q=>q.classList.remove("active"));
+document.querySelector(".quiz[data-idx='"+currentNum+"']").classList.add("active");
+updateProgress();
+refreshOptionStatus();
+}
+function calculateResult(){
+typeScore={floral:0,fruity:0,woody:0,fresh:0,oriental:0};
+for(let k in answerMap){
+answerMap[k].forEach(t=>typeScore[t]++);
+}
+let max=0;let win="";
+for(let t in typeScore){
+if(typeScore[t]>max){max=typeScore[t];win=t;}
+}
+return win;
+}
+function renderResult(t){
+const d=resultConfig[t];
+let h='<div class="r-tag">'+d.tag+'</div>';
+h+='<div class="r-title">'+d.name+'</div>';
+h+='<div class="r-desc">'+d.desc+'</div>';
+h+='<div class="r-item"><div class="r-label">你的本命香调</div><div class="r-text">'+d.note+'</div></div>';
+h+='<div class="r-item"><div class="r-label">为你推荐</div></div>';
+d.perfume.forEach(p=>{
+h+='<div class="r-perfume"><div class="p-name">'+p.name+'</div><div class="p-en">'+p.en+'</div><div class="p-desc">'+p.desc+'</div></div>';
+});
+h+='<div style="text-align:center;margin-top:30px;font-size:14px;color:#999">长按链接分享给好友</div>';
+res.innerHTML=h;
+res.style.display="block";
+document.querySelector(".btns").style.display="none";
+document.querySelector(".progress").style.display="none";
+}
+prev.onclick=()=>{
+if(currentNum>1){currentNum--;showCurrent();}};
+next.onclick=()=>{
+if(currentNum<total){currentNum++;showCurrent();}else{
+const t=calculateResult();
+renderResult(t);
+}};
+renderQuizs();
+showCurrent();
+</script>
+</body>
+</html>
